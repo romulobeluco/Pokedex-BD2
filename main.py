@@ -1,26 +1,23 @@
+from database import Database
+from helper.writeAJson import writeAJson
 
-from typing import Collection
-import pymongo
-from dataset.pokemon_dataset import dataset
+db = Database(database="pokedex", collection="pokemons")
+#db.resetDatabase()
 
+tipos = ["Grass", "Poison"]
+pokemons = db.collection.find({ "type": {"$in": tipos}, "next_evolution": {"$exists": True} })
+writeAJson(pokemons,"pokemons")
 
-class Database:
-    def __init__(self, database, collection):
-        self.connect(database, collection)
+#Pokemons com 2 weaknesses
+pokemons = db.collection.find({"weaknesses": {"$size": 2}})
+writeAJson(pokemons,"pokemons")
 
-    def connect(self, database, collection):
-        try:
-            connectionString = "localhost:27017"
-            self.clusterConnection = pymongo.MongoClient(
-                connectionString,
-                tlsAllowInvalidCertificates=True  # CASO OCORRA O ERRO [SSL_INVALID_CERTIFICATE]
-            )
-            self.db = self.clusterConnection[database]
-            self.collection = self.db[collection]
-        except Exception as e:
-            print(e)
+pokemons = db.collection.find({"$or": [{"type":"Fire"},{"weaknesses": "Water"}]})
+writeAJson(pokemons,"pokemons")
 
-    def resetDatabase(self):
-        self.db.drop_collection(self.collection)
-        self.collection.insert_many(dataset)
+tipos = ["Fire"]
+pokemons = db.collection.find({ "type": {"$in": tipos}, "next_evolution": {"$exists": False} })
+writeAJson(pokemons,"pokemons")
 
+pokemons = db.collection.find({"spawn_chance": {"$gt": 0.3, "$lt": 0.6}})
+writeAJson(pokemons,"pokemons")
